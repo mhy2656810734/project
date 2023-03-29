@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客列表页</title>
+    <link rel="stylesheet" href="CSS/common.css">
+    <link rel="stylesheet" href="CSS/blog_list.css">
+    
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div class="nav">
+        <img src="image/头像.jpg" alt="">
+        <span class="title">我的博客系统</span>
+        <!-- 这个空的div的作用就是将后面的三个超链接挤过去 -->
+        <div class="spacer"></div>
+        <a href="blog_list.html">主页</a>
+        <a href="blog_edit.html">写博客</a>
+        <a href="logout">注销</a>
+    </div>
+    <!-- 页面主体部分 -->
+    <div class="contains">
+        <!-- 左侧信息 -->
+        <div class="contains-left">
+            <!-- 使用card表示用户信息框 -->
+            <div class="card">
+                <img src="image/小马.jpg">
+                <h2>小马</h2>
+                <a href="#">github地址</a>
+                <div class="counter">
+                    <span>文章</span>
+                    <span>分类</span>
+                </div>
+                <div class="counter">
+                    <span>2</span>
+                    <span>1</span>
+                </div>
+            </div>
+        </div>
+        <!-- 右侧信息 -->
+        <div class="contains-right">
+
+        </div>
+    </div>
+    <script src="./JS/editor.js"></script>
+    <script>
+        // 在页面加载时,先服务器发起请求,获取博客列表数据
+        function getBlogs() {
+            $.ajax({
+                type:'get',
+                url:'blog',
+                success:function(body) {
+                    // 响应的正文 是一个json格式的字符串,但是此处已经被Jquery 自动解析成数组了
+                    // 直接for循环遍历即可
+                    let containerRight = document.querySelector('.contains-right');
+                    for (let blog of body) {
+                       // 构造页面内容 根据之前的html代码
+                       // 整个博客的div
+                       let blogDiv = document.createElement('div');
+                       blogDiv.className = 'blog';
+                       // 构造的标题
+                       let titleDiv = document.createElement('div');
+                       titleDiv.className = 'title';
+                       titleDiv.innerHTML = blog.title;
+                       blogDiv.appendChild(titleDiv);
+                       // 构造发布时间
+                       let dateDiv = document.createElement('div');
+                       dateDiv.className = 'date';
+                       dateDiv.innerHTML = blog.postTime;
+                       blogDiv.appendChild(dateDiv);
+                       // 构造博客摘要
+                       let descDiv = document.createElement('div');
+                       descDiv.className = 'desc';
+                       descDiv.innerHTML = blog.content;
+                       blogDiv.appendChild(descDiv);
+                       // 构造查看全文按钮
+                       let a = document.createElement('a');
+                       a.innerHTML = '查看全文&gt;&gt;';
+                       // 期望点击之后,能够跳转到博客详情页, 
+                       // 为了让博客详情页知道是点了哪个博客,把博客Id传过去
+                       a.href='blog_detail.html?blogId='+blog.blogId;
+                       blogDiv.appendChild(a);
+                       // 把blogDiv加入到父元素中
+                       containerRight.appendChild(blogDiv);
+                    }
+                }
+            });
+        }
+        getBlogs();
+        function checkLogin() {
+            $.ajax({
+                type:'get',
+                url:'login',
+                // 接收到的是一个 js字符串 会被Jquery自动转成JS对象
+                success:function(body) {
+                    if (body.userId && body.userId > 0) {
+                        // 登录成功 
+                        console.log("当前用户已经登录");
+                        // 显示当前登录用户
+                        let h2 = document.querySelector('.contains-left .card h2');
+                        h2.innerHTML = body.username;
+                    } else {
+                        // 强制用户跳转到登录页进行登录
+                        location.assign('blog.html');
+                    }
+                }
+            });
+        }
+        checkLogin();
+    </script>
+</body>
+</html>

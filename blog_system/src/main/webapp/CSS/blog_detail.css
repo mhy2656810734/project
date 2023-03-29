@@ -1,0 +1,16 @@
+/* 博客详情页 */
+.contains-right .title{
+    text-align: center;
+    color: rgb(22, 61, 234);
+    padding: 20px;
+}
+.contains-right .date{
+    text-align: center;
+    margin: 5px;
+    color:red;
+}
+.contains-right .content p{
+    text-indent: 2em;
+    padding: 10px 30px;
+    font-size: 15px;
+}

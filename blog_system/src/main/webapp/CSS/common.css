@@ -1,0 +1,118 @@
+/* 起手操作 */
+/* 消除浏览器的默认样式,同时避免元素盒子被内边距和边框撑大 */
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+html,body{
+    /* html是页面的最顶层的元素,高度100%是相对父元素来说(和父元素一样高)
+    对于html来说,父元素就是浏览器窗口,浏览器窗口多高 html就多高
+    body的父元素是html 设为100%和html一样高
+    如果不设置高度 此时元素的默认高度取决于内部的内容 */
+    height: 100%;
+}
+/* 设置背景 */
+body{
+    background-image: url('../image/背景.jpg');
+    /* 去除平铺 */
+    background-repeat: no-repeat;
+    /* 让图片尽可能伸展 */
+    background-size: cover;
+    background-position: center center;
+}
+/* 实现导航栏的样式 */
+.nav{
+    /* 设置宽度和父类一样宽 
+    对于块级元素 默认就是100%*/
+    width: 100%;
+    height: 50px;
+    background-color: rgba(50, 50, 50,0.3);
+    color: white;
+    /* 导航栏中的元素都是水平排列的 使用弹性布局来设置 */
+    display: flex;
+    /* 垂直方向子元素居中 */
+    align-items: center;
+}
+.nav img{
+    width: 40px;
+    height: 40px;
+    /* 设置外边距 */
+    margin-left: 30px;
+    margin-right: 10px;
+    /* 把内切圆的宽度设置为宽度的一半,刚好是一个圆形 */
+    border-radius: 50%;
+}
+.nav .spacer{
+    width: 70%;
+}
+.nav a{
+    /* 去掉下划线 */
+    text-decoration: none;
+    color: white;
+    /* 为了使a标签不那么紧凑,可以使用内边距
+    外边距也可以,但是内边距也是元素的内容 可以增大用户的点击面积 */
+    padding: 0 10px;
+}
+/* 编辑页面主体样式 */
+.contains{
+    height: calc(100% - 50px);
+    width: 1000px;
+    /* 水平居中 */
+    margin: 0 auto;
+    /* 使用弹性布局 */
+    display: flex;
+    align-items: center;
+    /* 中间留空白 */
+    justify-content: space-between;
+}
+.contains-left {
+    height: 100%;
+    width: 200px;
+    /* background-color: #fff; */
+    
+}
+.contains-right {
+    height: 100%;
+    /* 不设置800,留出5px作为中缝 */
+    width: 795px;
+    /* background-color: red; */
+   background-color: rgba(255,255,255,0.8);
+   border-radius: 10px;
+   /* 添加一个滚动条 
+   这个属性表示 内容不溢出无滚动条  内容溢出自动添加滚动条*/
+   overflow: auto;
+}
+.card{
+    background-color: rgba(255,255,255,0.8);
+    border-radius: 10px;
+    /* 设置内边距 和边框有点距离 */
+    padding: 30px;
+
+}
+/* 用户头像 */
+img {
+    height: 140px;
+    width: 140px;
+    border-radius: 50%;
+}
+.card h2{
+    text-align: center;
+    padding: 10px 0; 
+}
+a{
+    /* 去掉下划线 */
+    text-decoration: none;
+    /* a 标签本身是行内元素,转换成块级元素再设置 */
+    display: block;
+    text-align: center;
+    color: #777;
+    padding: 0;
+}
+.counter {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    /* 让各个元素之间有距离 */
+    padding: 5px;
+}

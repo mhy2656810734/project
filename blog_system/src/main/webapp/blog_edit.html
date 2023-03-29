@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客编辑页</title>
+    <link rel="stylesheet" href="CSS/common.css">
+    <link rel="stylesheet" href="CSS/blog_edit.css">
+    <script src="JS/editor.js"></script>
+    <!-- 引入 editor.md 的依赖 -->
+    <link rel="stylesheet" href="editor.md/css/editormd.min.css" />
+    <script src="editor.md/lib/marked.min.js"></script>
+    <script src="editor.md/lib/prettify.min.js"></script>
+    <script src="editor.md/editormd.js"></script>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div class="nav">
+        <img src="image/头像.jpg" alt="">
+        <span class="title">我的博客系统</span>
+        <!-- 这个空的div的作用就是将后面的三个超链接挤过去 -->
+        <div class="spacer"></div>
+        <a href="blog_list.html">主页</a>
+        <a href="blog_edit.html">写博客</a>
+        <a href="logout">注销</a>
+    </div>
+    <!-- 主体部分 -->
+    <div class="blog-edit-container">
+        <!-- 标题编辑区 -->
+        <form action="blog" method="post" style="height: 100%;">
+            <div class="title">
+                <input type="text" id="title" placeholder="输入文章标题" name="title">
+                <input type="submit" id = 'submit' value="提交">
+            </div>
+            <!-- 博客编辑器 使用id选择器是为了和markdown编辑器对接 -->
+            <div id="editor">
+                <textarea name="content" style="display:none"></textarea>
+            </div>
+        </form>
+    </div>
+    <script>
+        var editor = editormd("editor", {
+            // 这里的尺寸必须在这里设置. 设置样式会被 editormd 自动覆盖掉. 
+            width: "100%",
+            // 设定编辑器高度
+            height: "calc(100% - 50px)",
+            // 编辑器中的初始内容
+            markdown: "# 在这里写下一篇博客",
+            // 指定 editor.md 依赖的插件路径
+            path: "editor.md/lib/"
+        });
+        function checkLogin() {
+            $.ajax({
+                type:'get',
+                url:'login',
+                // 接收到的是一个 js字符串 会被Jquery自动转成JS对象
+                success:function(body) {
+                    if (body.userId && body.userId > 0) {
+                        // 登录成功 
+                        console.log("当前用户已经登录");
+                    } else {
+                        // 强制用户跳转到登录页进行登录
+                        location.assign('blog.html');
+                    }
+                }
+            });
+        }
+        checkLogin();
+    </script>
+</body>
+</html>

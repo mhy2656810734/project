@@ -1,0 +1,50 @@
+/* 设置博客右侧内容部分 */
+/* 先设置博客容器大小 */
+.blog {
+    width: 100%;
+    padding: 20px;
+}
+.blog .title{
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 5px;
+    color: rgb(22, 61, 234);
+}
+.blog .date{
+    text-align: center;
+    margin: 5px;
+    color:red;
+}
+.blog .desc {
+    text-indent: 2em;
+}
+/* 设置查看原文按钮 */
+.blog a{
+    /* 转成块级元素好设置 */
+    display: block;
+    width: 120px;
+    height: 30px;
+    /* 让文字水平居中 */
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    /* 设置边框 */
+    border:2px solid black;
+    /* 让文字水平居中 */
+    text-align: center;
+    /* 让文字垂直居中 */
+    line-height: center;
+    /* 去掉下划线 */
+    text-decoration: none;
+    color:black;
+    box-sizing: border-box;
+    border-radius: 10px;
+    /* 设置一个鼠标悬停的过渡效果 */
+    transition: all 0.8s;
+}
+/* 给鼠标加一个滑动变化 */
+.blog a:hover{
+    background-color: green;
+    color: aqua;
+}

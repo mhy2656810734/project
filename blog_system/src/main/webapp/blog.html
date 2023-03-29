@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客登录页</title>
+    <link rel="stylesheet" href="CSS/common.css">
+    <link rel="stylesheet" href="CSS/blog.css">
+</head>
+<body>
+      <!-- 导航栏 -->
+      <div class="nav">
+        <img src="image/头像.jpg" alt="">
+        <span class="title">我的博客系统</span>
+        <!-- 这个空的div的作用就是将后面的三个超链接挤过去 -->
+        <div class="spacer"></div>
+        <a href="#">主页</a>
+        <a href="#">写博客</a>
+        <a href="#">注销</a>
+    </div>
+    <!-- 设置主体部分 -->
+    <div class="login-container">
+        <!-- 垂直水平居中的登录框 -->
+        <div class="login-dialog">
+            <form action="login" method="post">
+                <h3>登录</h3>
+                <div class="row">
+                    <span>用户名</span>
+                    <input type="text" id="username" placeholder="手机号/邮箱" name='username'>
+                </div>
+                <div class="row">
+                    <span>密码</span>
+                    <input type="password" id="password" name="password">
+                </div>
+               <div class="row">
+                <input type='submit' id="submit" value="登录">
+               </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+/* 设置博客编辑页详情 */
+/* 设置主体 */
+.blog-edit-container{
+    width: 1000px;
+    height: calc(100% - 50px);
+     /* 居中 */
+    margin: 0 auto;  
+   
+}
+/* 设置标题编辑区 */
+.title {
+    height: 50px;
+    display: flex;
+     justify-content: space-between;
+     align-items: center;
+}
+#title{
+    width: 895px;
+    height: 40px;
+    font-size: 20px;
+    padding-left: 5px;
+    border-radius: 5px;
+    /* 去掉轮廓线 鼠标选中后的黑圈 */
+    outline: none;
+    /* 设置背景半透明 */
+    background-color: rgba(255,255,255,0.7);
+}
+
+/* 获取到焦点 */
+#title:focus{
+background-color: rgb(255, 255, 255);
+}
+
+#submit{
+    width: 100px;
+    height: 40px;
+    background-color: orange;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+#submit:active{
+    background-color:#666;
+}
+#editor{
+    border-radius: 10px;
+    /* 设置背景半透明 */
+    opacity: 80%;
+}
