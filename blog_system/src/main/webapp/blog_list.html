@@ -28,13 +28,13 @@
             <div class="card">
                 <img src="image/小马.jpg">
                 <h2>小马</h2>
-                <a href="#">github地址</a>
+                <a href="https://github.com/mhy2656810734">github地址</a>
                 <div class="counter">
                     <span>文章</span>
                     <span>分类</span>
                 </div>
                 <div class="counter">
-                    <span>2</span>
+                    <span class="flag">2</span>
                     <span>1</span>
                 </div>
             </div>
@@ -109,6 +109,20 @@
             });
         }
         checkLogin();
+        // 在页面加载的时候发送get请求,计算当前共有多少个博客
+        function func() {
+            $.ajax({
+                type:'get',
+                url:'count',
+                success:function(body) {
+                    // body 就是获取到的博客的数量
+                    console.log("已经获取到所有博客的数量");
+                    let span = document.querySelector(".flag");
+                    span.innerHTML = body;
+                }
+            });
+        }
+        func();
     </script>
 </body>
 </html>
