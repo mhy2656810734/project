@@ -1,0 +1,40 @@
+package api;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import model.Blog;
+import model.BlogDao;
+import model.User;
+import model.UserDao;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ * @author 26568
+ * @date 2023-03-30 15:48
+ */
+@WebServlet("/detail")
+public class DetailServlet extends HttpServlet {
+    private ObjectMapper objectMapper = new ObjectMapper();
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // 拿到这个博客id以后,根据id创建博客
+        Blog blog = objectMapper.readValue("blogId",Blog.class);
+        if (blog == null) {
+            resp.setContentType("text/html;charset=utf8");
+            resp.getWriter().write("当前博客信息有误");
+            return;
+        }
+        UserDao userDao =  new UserDao();
+        User user = userDao.selectById(blog.getUserId());
+        // 然后根据这个blogId计算博客数目
+        BlogDao blogDao = new BlogDao();
+        int count = blogDao.count(user.getUserId());
+        resp.setContentType("application/json;charset=utf8");
+        resp.getWriter().write(count+"");
+    }
+}
