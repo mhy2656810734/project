@@ -1,0 +1,15 @@
+package com.example.demo.mapper;
+
+import com.example.demo.model.Friend;
+import com.example.demo.model.MessageSession;
+import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
+
+@Mapper
+public interface MessageSessionMapper {
+    //1.根据useId查询当前用户在哪些会话中
+    public List<Integer> getSessionIdList(int userId);
+    // 2.根据查出来的会话，查询当前会话包含的所有用户（除自己以外）
+    public List<Friend> getFriendsById(int sessionId,int selfUserId);
+}
