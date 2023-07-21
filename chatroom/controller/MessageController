@@ -1,0 +1,29 @@
+package com.example.demo.controller;
+
+import com.example.demo.model.Message;
+import com.example.demo.service.MessageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * @author 26568
+ * @date 2023-07-10 15:48
+ */
+@RestController
+public class MessageController {
+    @Autowired
+    private MessageService messageService;
+    @GetMapping("/getMessage")
+    public List<Message> getMessage(int sessionId) {
+        List<Message> list = messageService.getMessageBySessionId(sessionId);
+        // 由于获取到的消息都是逆序的，最开始位置是最新消息，最后面是最旧的消息
+        // 所以需要逆序这个list
+        Collections.reverse(list);
+        return list;
+    }
+}
