@@ -1,0 +1,19 @@
+package com.example.demo.mapper;
+
+import com.example.demo.model.Friend;
+import com.example.demo.model.User;
+import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
+
+@Mapper
+public interface FriendMapper {
+    // 根据用户id查询好友(用于展示好友列表)
+    public List<Friend> getFriendList(int userId);
+    // 根据用户名查询好友(用于搜索功能)  去掉自己
+    public List<Friend> getFriendListByUserName(String username,String selfUserName);
+    // 添加好友
+    public int add(int userId,int friendId);
+    // 根据传入的userId 查找friendId
+    public List<Integer> findFriend(int userId);
+}
