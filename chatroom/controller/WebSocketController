@@ -1,0 +1,132 @@
+package com.example.demo.controller;
+
+import com.example.demo.config.MyConfig;
+import com.example.demo.conponent.OnlineUserManager;
+import com.example.demo.mapper.MessageMapper;
+import com.example.demo.mapper.MessageSessionMapper;
+import com.example.demo.model.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import java.io.IOException;
+import java.util.List;
+
+/**
+ * @author 26568
+ * @date 2023-07-12 10:53
+ */
+@Configuration
+public class WebSocketController extends TextWebSocketHandler {
+    @Autowired
+    private MessageMapper messageMapper;
+    @Autowired
+    private MessageSessionMapper messageSessionMapper;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private OnlineUserManager onlineUserManager;
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        // websocket连接建立成功以后执行
+        System.out.println("websocket连接成功:");
+        User user = (User)session.getAttributes().get(MyConfig.USER_INFO);
+        System.out.println("当前登录用户的userId："+user.getUserId());
+        if (user == null) {
+            // 如果当前用户未登录
+            System.out.println("当前用户信息为空，未登录");
+            return;
+        }
+        // 连接建立成功，用户上线，需要存储映射关系
+        onlineUserManager.online(user.getUserId(), session);
+    }
+
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        // websocket接收到消息执行的方法
+        System.out.println("websocket 接收到消息:"+message.toString());
+        User user = (User)session.getAttributes().get(MyConfig.USER_INFO);
+        System.out.println("当前登录用户的userId："+user.getUserId());
+        if (user == null) {
+            // 如果当前用户未登录
+            System.out.println("当前用户信息为空，未登录");
+            return;
+        }
+        // 2.拿到的请求是个JSON格式的字符串，需要将其转成自定义的响应MessageRequest
+        MessageRequest request = objectMapper.readValue(message.getPayload(),MessageRequest.class);
+        System.out.println("这是发送的信息:"+request);
+        // 如果是规定的message类型就进行转发
+        if (request.getType().equals("message")) {
+            transferMessage(user,request);
+        } else {
+            System.out.println("请求的格式有误:"+message.getPayload());
+        }
+    }
+    private void transferMessage(User user,MessageRequest request) throws IOException {
+        // 1.首先根据request中的sessionId 去找到当前会话所有的user对象
+        // 将当前登录用户也加入这个集合（之前的sql语句去掉了当前用户）
+        // 这样做的目的是方便在自己的客户端上显示自己发送的消息。
+        List<Friend> list = messageSessionMapper.getFriendsById(request.getSessionId(), user.getUserId());
+        Friend self = new Friend();
+        self.setFriendId(user.getUserId());
+        self.setFriendName(user.getUsername());
+        list.add(self);
+        // 2.构造MessageResponse 响应
+        MessageResponse response = new MessageResponse();
+        response.setFromId(user.getUserId());
+        response.setFromName(user.getUsername());
+        response.setSessionId(request.getSessionId());
+        response.setContent(request.getContent());
+       // 构造的MessageResponse 是一个java对象，所以需要转成JSON字符串进行发送
+        String respJson = objectMapper.writeValueAsString(response);
+        // 3.遍历集合，给每个用户都发送消息 (知道了每个用户的userId 就可以查到对应的WebSocketSession)
+        for (Friend friend:list) {
+            WebSocketSession webSocketSession = onlineUserManager.get(friend.getFriendId());
+            // 如果当前用户不在线，则不发送
+            if (webSocketSession == null) {
+               continue;
+            }
+            webSocketSession.sendMessage(new TextMessage(respJson));
+        }
+        // 4.转发的消息，还需要放到数据库中，用户如果下线以后，重新上线，还可以通过历史消息的方式拿到之前的消息
+        // 构造一个Message对象 然后将这条消息插入message 数据库
+        Message message = new Message();
+        message.setFromId(user.getUserId());
+        message.setSessionId(request.getSessionId());
+        message.setContent(request.getContent());
+        messageMapper.add(message);
+    }
+    @Override
+    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+        // websocket 连接出现异常的时候执行
+        // 用户下线
+        User user = (User)session.getAttributes().get(MyConfig.USER_INFO);
+        if (user == null) {
+            // 如果当前用户未登录
+            System.out.println("当前用户信息为空，未登录");
+            return;
+        }
+        onlineUserManager.offline(user.getUserId(), session);
+        System.out.println("websocket连接异常，用户下线: "+exception);
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        // websocket 连接关闭的时候执行的方法
+        User user = (User)session.getAttributes().get(MyConfig.USER_INFO);
+        if (user == null) {
+            // 如果当前用户未登录
+            System.out.println("当前用户信息为空，未登录");
+            return;
+        }
+        onlineUserManager.offline(user.getUserId(), session);
+        System.out.println("websocket 连接关闭："+status);
+    }
+
+}
