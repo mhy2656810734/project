@@ -1,0 +1,42 @@
+package com.example.demo.conponent;
+
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketSession;
+
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * @author 26568
+ * @date 2023-07-12 12:40
+ */
+// 通过这个类来记录当前用户在线的状态( 维护 userId 和 WebSocketSession 之间的映射)
+@Component
+public class OnlineUserManager {
+    // 可能在多线程下进行操作 必须保证线程安全问题
+    private ConcurrentHashMap<Integer, WebSocketSession> map = new ConcurrentHashMap<>();
+    // 1.用户上线，给这个hash表中插入键值对
+    public void online(int userId,WebSocketSession webSocketSession) {
+        if (map.get(userId) != null) {
+            // 说明当前用户已经登录，就登录失败，不会记录这个映射关系
+            // 不记录这个映射，后续就不会收到任何消息（这里通过映射关系实现消息转发）
+            return;
+        }
+        map.put(userId,webSocketSession);
+        System.out.println("[  "+userId+"  ] 上线!!!!");
+    }
+    // 2.用户下线，给这个hash表中删除键值对
+    public void offline(int userId,WebSocketSession webSocketSession) {
+        // 判断当前这个会话是否存在
+        WebSocketSession  existsSession = map.get(userId);
+        // 然后判断这个存在的会话和传入的会话是否相等
+        if (existsSession == webSocketSession) {
+            // 如果相等，证明是同一个用户   删除映射关系
+            map.remove(userId);
+            System.out.println("[  "+userId+"  ] 下线!!!!");
+        }
+    }
+    // 3.根据userId 查询WebSocketSession
+    public WebSocketSession get(int userId) {
+        return map.get(userId);
+    }
+}
