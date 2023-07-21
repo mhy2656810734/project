@@ -1,0 +1,12 @@
+package com.example.demo.mapper;
+
+import com.example.demo.model.User;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface UserMapper {
+    // 登录(根据用户名)
+    public User selectByName(String username);
+    // 注册
+    public int  insert(User user);
+}
