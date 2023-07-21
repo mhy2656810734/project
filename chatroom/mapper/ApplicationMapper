@@ -1,0 +1,16 @@
+package com.example.demo.mapper;
+
+import com.example.demo.model.Application;
+import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
+
+@Mapper
+public interface ApplicationMapper {
+    // 插入好友申请
+    public int add(Application application);
+    // 根据friendName 查找好友申请
+    public List<Application> loadApplication(String friendName);
+    // 根据applicationId 删除数据
+    public int delete(int applicationId);
+}
