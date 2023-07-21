@@ -1,0 +1,17 @@
+package com.example.demo.mapper;
+
+import com.example.demo.model.Message;
+import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
+
+@Mapper
+public interface MessageMapper {
+    // 通过sessionId 查询到最后一条历史消息
+    public String getLastMessageBySessionId(int sessionId);
+    // 根据传入的sessionId 查询历史消息，返回最新的100条消息（根据消息时间逆序）
+    public List<Message> getMessageBySessionId(int sessionId);
+
+    // 根据传入的对象插入数据库
+    public int add(Message message);
+}
