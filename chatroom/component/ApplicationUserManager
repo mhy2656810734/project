@@ -1,0 +1,40 @@
+package com.example.demo.conponent;
+
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketSession;
+
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * @author 26568
+ * @date 2023-07-15 10:58
+ */
+@Component
+public class ApplicationUserManager {
+    // 在多线程下保证信息安全
+    private ConcurrentHashMap<Integer, WebSocketSession> map = new ConcurrentHashMap<>();
+    // 1.用户上线，保存当前的映射关系
+    public void online(int userId,WebSocketSession webSocketSession) {
+        // 如果当前用户已经登录，则不必存储
+        if (map.get(userId) != null) {
+            return;
+        }
+        map.put(userId,webSocketSession);
+        System.out.println("当前这个用户已经存入上线用户");
+    }
+    // 2.用户下线，删除当前的映射关系
+    public void offline(int userId,WebSocketSession webSocketSession) {
+        // 判断这个会话是否存在
+        WebSocketSession cur = map.get(userId);
+        if (cur == webSocketSession) {
+            // 说明是同一个用户，删除这个会话
+            map.remove(userId);
+            System.out.println("当前这个用户已经下线啦!!!!!!");
+        }
+    }
+
+    // 3.根据userId 获取session
+    public WebSocketSession get(int userId) {
+        return map.get(userId);
+    }
+}
