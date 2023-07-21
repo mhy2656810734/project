@@ -1,0 +1,96 @@
+package com.example.demo.controller;
+
+import com.example.demo.config.MyConfig;
+import com.example.demo.conponent.OnlineUserManager;
+import com.example.demo.mapper.MessageMapper;
+import com.example.demo.model.*;
+import com.example.demo.service.*;
+import org.apache.ibatis.annotations.Mapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * @author 26568
+ * @date 2023-07-13 19:09
+ */
+@RestController
+public class ApplicationController {
+    @Autowired
+    private ApplicationService applicationService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private FriendService friendService;
+    @Autowired
+    private MessageSessionItemService messageSessionItemService;
+    @Autowired
+    private MessageService messageService;
+
+    // 加载历史好友申请
+    @GetMapping("/loadApplication")
+    public List<Application> loadApplication(@SessionAttribute(MyConfig.USER_INFO) User user) {
+        // 1.根据当前用户的用户名去application表里查
+        //   当前用户名在application存储的时候是friendName;
+        List<Application> list = applicationService.loadApplication(user.getUsername());
+        System.out.println("添加当前用户:"+user.getUsername()+"用户有:");
+        list.stream().forEach(System.out::println);
+        return list;
+    }
+    // 同意好友申请
+    @Transactional   // 确保原子操作
+    @PostMapping("/agreeApplication")
+    public MessageResponse agree(String username,String content,int applicationId,
+                                 @SessionAttribute(MyConfig.USER_INFO) User user) {
+        // 1.先找到申请人(username的userId)
+        User from = userService.selectByName(username);
+        System.out.println("找到申请人:"+from.getUsername());
+        // 然后去friend表中查数据
+        // 判断申请人和登录用户是否已经是好友
+        List<Integer> list = friendService.findFriend(user.getUserId());
+        for (int item:list) {
+            if (item == from.getUserId()) {
+                System.out.println("已经同意了这个好友申请");
+                // 根据 applicationId 删除application 表中记录
+                applicationService.delete(applicationId);
+                return null;
+            }
+        }
+        // 2.给 friend表插入两条数据
+        friendService.add(from.getUserId(),user.getUserId());
+        friendService.add(user.getUserId(), from.getUserId());
+        // 3.给message_session 表中新建一个sessionId 并返回
+        MessageSession messageSession = new MessageSession();
+        messageSessionItemService.addMessageSession(messageSession);
+        // 4.在message_session_user 表中保存二者关系
+        messageSessionItemService.insert(messageSession.getSessionId(), from.getUserId());
+        messageSessionItemService.insert(messageSession.getSessionId(), user.getUserId());
+        // 5.根据 applicationId 删除application 表中记录
+        applicationService.delete(applicationId);
+        // 6.将申请消息content插入message表中
+        Message message = new Message();
+        message.setFromId(from.getUserId());
+        message.setSessionId(messageSession.getSessionId());
+        message.setContent(content);
+        messageService.add(message);
+        // 7.构造MessageResponse 对象并返回
+        MessageResponse response = new MessageResponse();
+        response.setSessionId(messageSession.getSessionId());
+        response.setContent(content);
+        response.setFromName(username);
+        response.setFromId(from.getUserId());
+        System.out.println("上述操作完成");
+        return response;
+    }
+    // 拒绝好友申请
+    @PostMapping("/refuseApplication")
+    public Object refuse(int applicationId) {
+        // 直接去applicationId 删除这个好友请求即可
+        applicationService.delete(applicationId);
+        System.out.println("拒绝好友请求成功!!");
+        return 1;
+    }
+}
