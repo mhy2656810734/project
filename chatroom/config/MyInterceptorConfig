@@ -1,0 +1,31 @@
+package com.example.demo.config;
+
+import com.example.demo.conponent.MyInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+/**
+ * @author 26568
+ * @date 2023-07-16 9:11
+ */
+@Configuration
+public class MyInterceptorConfig implements WebMvcConfigurer {
+    @Autowired
+    private MyInterceptor myInterceptorl;
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(myInterceptorl)
+                .addPathPatterns("/**")   // 拦截所有路径
+                .excludePathPatterns("/login")
+                .excludePathPatterns("/rigister")
+                .excludePathPatterns("/image/**")
+                .excludePathPatterns("/css/**")
+                .excludePathPatterns("/js/**")
+                .excludePathPatterns("/client.html")
+                .excludePathPatterns("/login.html")
+                .excludePathPatterns("/rigister.html")
+                ;
+    }
+}
