@@ -1,0 +1,150 @@
+package com.example.demo.controller;
+
+import com.example.demo.config.MyConfig;
+import com.example.demo.conponent.ApplicationUserManager;
+import com.example.demo.conponent.OnlineUserManager;
+import com.example.demo.mapper.ApplicationMapper;
+import com.example.demo.model.*;
+import com.example.demo.service.ApplicationService;
+import com.example.demo.service.FriendService;
+import com.example.demo.service.UserService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import java.io.IOException;
+import java.util.List;
+
+/**
+ * @author 26568
+ * @date 2023-07-15 10:44
+ */
+@Configuration
+public class ApplicationSocketController extends TextWebSocketHandler {
+    @Autowired
+    private ApplicationUserManager applicationUserManager;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private FriendService friendService;
+    @Autowired
+    private ApplicationService applicationService;
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        // 连接正常执行
+        System.out.println("applicationSocket 已经连接成功！！！");
+        User user = (User) session.getAttributes().get(MyConfig.USER_INFO);
+        System.out.println("这是applicationSocket 打印的信息");
+        System.out.println("当前登录用户的userId："+user.getUserId());
+        if (user == null) {
+            // 如果当前用户未登录
+            System.out.println("当前用户信息为空，未登录");
+            return;
+        }
+        // 连接成功，用户上线，需要存储映射关系
+        applicationUserManager.online(user.getUserId(), session);
+    }
+
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+       // 接收到数据
+        System.out.println("applicationSocket 接收到数据:"+message.toString());
+        // TODO 后续主要任务
+        User user = (User) session.getAttributes().get(MyConfig.USER_INFO);
+        if (user == null) {
+            System.out.println("当前登录用户信息为空，未登录");
+            return;
+        }
+        System.out.println("这是applicationSocket 打印的信息");
+        System.out.println("当前登录用户的userId："+user.getUserId());
+        // 2.拿到的请求是一个Json格式的字符串，需要转成java对象
+        ApplicationRequest request = objectMapper.readValue(message.getPayload(),ApplicationRequest.class);
+        System.out.println("这里发送的信息::"+request);
+        if (request.getType().equals("onlineApplication")) {
+            // 格式正确，进行消息转发
+            transferMessage(user,request);
+        } else {
+            System.out.println("applicationSocket 请求的消息格式错误："+message.getPayload());
+        }
+    }
+    @Transactional
+    private  void transferMessage(User user,ApplicationRequest request) throws IOException {
+        // 1.首先去判断当前是否已经添加过好友了
+        //   先根据传入的fromName 去user表查
+        //   然后去friend表根据当前用户的userId，去查friendId，如果能查到，说明是好友
+        //   查不到构造添加好友申请
+        User friend = userService.selectByName(request.getToName());
+        List<Friend> list  = friendService.getFriendList(friend.getUserId());
+        ApplicationResponse response = new ApplicationResponse();
+        // 遍历这个列表
+        for (Friend f:list) {
+            if (f.getFriendId() == user.getUserId()) {
+                // 说明已经添加过好友
+                System.out.println("当前用户:"+user.getUsername()+"和:"+request.getFromName()+"已经添加过好友");
+                // 将响应数据的result设置为1，告知前端当前用户已经添加过好友
+               response.setResult(1);
+            }
+        }
+        // 2.当前用户没有添加过
+        if (response.getResult() != 1) {
+            response.setResult(2);
+            // 3.构造好友申请，添加进application数据库
+            Application application = new Application();
+            application.setUsername(request.getFromName());
+            application.setContent(request.getContent());
+            application.setFriendName(request.getToName());
+            applicationService.add(application);
+            System.out.println("当前验证消息的applicationId:"+application.getApplicationId());
+            // 4.构造响应数据，给当前在线的和用户传入的request.username相符合的用户发送好友申请
+            response.setContent(request.getContent());
+            response.setApplicationId(application.getApplicationId());
+            response.setFromName(request.getFromName());
+            WebSocketSession friendSession = applicationUserManager.get(friend.getUserId());
+            // 转为JSon格式的字符串
+            String responseJson = objectMapper.writeValueAsString(response);
+            // 如果在线则  friendSession 不为空  并发送验证消息
+            if (friendSession != null) {
+                friendSession.sendMessage(new TextMessage(responseJson));
+            }
+            // 5.给自己发一份响应，通知前端刷新好友列表和会话列表
+            WebSocketSession selfSession = applicationUserManager.get(user.getUserId());
+            response.setResult(3);
+            String selfResp = objectMapper.writeValueAsString(response);
+            selfSession.sendMessage(new TextMessage(selfResp));
+        }
+    }
+    @Override
+    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+        // 连接异常
+        System.out.println("applicationSocket 连接出现异常:"+exception);
+        User user = (User)session.getAttributes().get(MyConfig.USER_INFO);
+        if (user == null) {
+            // 如果当前用户未登录
+            System.out.println("当前用户信息为空，未登录");
+            return;
+        }
+        applicationUserManager.offline(user.getUserId(), session);
+        System.out.println("applicationSocket连接异常，用户下线: "+exception);
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        // 连接正常关闭
+        User user = (User)session.getAttributes().get(MyConfig.USER_INFO);
+        if (user == null) {
+            // 如果当前用户未登录
+            System.out.println("当前用户信息为空，未登录");
+            return;
+        }
+        applicationUserManager.offline(user.getUserId(), session);
+        System.out.println("applicationSocket连接关闭，用户下线: "+status);
+    }
+}
