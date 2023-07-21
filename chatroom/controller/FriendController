@@ -1,0 +1,52 @@
+package com.example.demo.controller;
+
+import com.example.demo.config.MyConfig;
+import com.example.demo.model.Friend;
+import com.example.demo.model.User;
+import com.example.demo.service.FriendService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.SessionAttribute;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @author 26568
+ * @date 2023-07-08 8:55
+ */
+@RestController
+public class FriendController {
+    @Autowired
+    private FriendService friendService;
+    @GetMapping("/getFriendList")
+    public List<Friend> getFriendList(HttpServletRequest request) {
+        // 1.判断会话是否正确
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            System.out.println("当前用户未登录!!");
+            return new ArrayList<Friend>();
+        }
+        // 2.判断用户信息是否正确
+        User user = (User)session.getAttribute(MyConfig.USER_INFO);
+        if (user == null) {
+            System.out.println("getFriend方法无法查询到结果!!!");
+            return new ArrayList<Friend>();
+        }
+        List<Friend> list = friendService.getFriendList(user.getUserId());
+        System.out.println(list);
+        return list;
+    }
+    // 根据用户名查询好友(用于搜索功能)
+    @GetMapping("/searchFriend")
+    public List<Friend> getFriendListByUserName(String username, @SessionAttribute(MyConfig.USER_INFO) User user) {
+        // 查找结果
+        List<Friend> list = friendService.getFriendListByUserName(username,user.getUsername());
+        System.out.println("查到的好友:");
+        list.stream().forEach(System.out::println);
+        return list;
+    }
+}
