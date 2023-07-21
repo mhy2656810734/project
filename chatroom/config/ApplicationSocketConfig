@@ -1,0 +1,29 @@
+package com.example.demo.config;
+
+import com.example.demo.controller.ApplicationSocketController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
+
+/**
+ * @author 26568
+ * @date 2023-07-15 10:42
+ */
+// 实现在线好友申请
+@Configuration
+@EnableWebSocket
+public class ApplicationSocketConfig implements WebSocketConfigurer {
+    @Autowired
+    private ApplicationSocketController applicationSocketController;
+    @Override
+    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        registry.addHandler(applicationSocketController,"/onlineApplication")
+        // 通过注册这个特定的 Httpsession 拦截器，就可以把用户给 HttpSession 中添加的Arttribute 键值对
+        // 往 WebSocketSession 里也添加一份
+                .addInterceptors(new HttpSessionHandshakeInterceptor())
+        ;
+    }
+}
