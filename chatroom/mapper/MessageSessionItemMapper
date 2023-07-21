@@ -1,0 +1,12 @@
+package com.example.demo.mapper;
+
+import com.example.demo.model.MessageSession;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface MessageSessionItemMapper {
+    // 1.给message_session表插入一条数据并返回主键
+    public int addMessageSession(MessageSession messageSession);
+    // 2.给message_session_user 表插入数据
+    public int insert(int sessionId,int userId);
+}
