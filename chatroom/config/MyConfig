@@ -1,0 +1,14 @@
+package com.example.demo.config;
+
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * 存储用户会话信息
+ * @author 26568
+ * @date 2023-07-08 8:58
+ */
+@Configuration
+public class MyConfig {
+    // 用户存储的会话信息
+   public static final String USER_INFO="USER_INFO";
+}
