@@ -1,0 +1,13 @@
+package com.example.demo.model;
+
+import lombok.Data;
+
+/**
+ * @author 26568
+ * @date 2023-07-08 8:46
+ */
+@Data
+public class Friend {
+    private int friendId;
+    private String friendName;
+}
