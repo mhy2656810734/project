@@ -1,0 +1,17 @@
+package com.example.demo.model;
+
+import lombok.Data;
+
+import java.util.List;
+
+/**
+ * 会话信息
+ * @author 26568
+ * @date 2023-07-08 11:22
+ */
+@Data
+public class MessageSession {
+    private int sessionId;
+    private List<Friend> friends;
+    private String lastMessage; // 最后一条消息
+}
