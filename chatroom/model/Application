@@ -1,0 +1,16 @@
+package com.example.demo.model;
+
+import lombok.Data;
+
+/**
+ * @author 26568
+ * @date 2023-07-13 19:03
+ */
+// 添加好友
+@Data
+public class Application {
+    private int applicationId;
+    private String username;
+    private String content;
+    private String friendName;
+}
