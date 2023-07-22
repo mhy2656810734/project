@@ -1,0 +1,14 @@
+package com.example.demo.model;
+
+import lombok.Data;
+
+/**
+ * @author 26568
+ * @date 2023-07-12 12:25
+ */
+@Data
+public class MessageRequest {
+    private String type = "message";
+    private int sessionId;
+    private String content;
+}
