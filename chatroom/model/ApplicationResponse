@@ -1,0 +1,16 @@
+package com.example.demo.model;
+
+import lombok.Data;
+
+/**
+ * @author 26568
+ * @date 2023-07-15 10:39
+ */
+@Data
+public class ApplicationResponse {
+    private String type = "onlineApplication";
+    private String fromName;
+    private String content;
+    private int applicationId;
+    private int result;
+}
