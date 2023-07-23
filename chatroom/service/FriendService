@@ -1,0 +1,33 @@
+package com.example.demo.service;
+
+import com.example.demo.mapper.FriendMapper;
+import com.example.demo.model.Friend;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * @author 26568
+ * @date 2023-07-08 8:55
+ */
+@Service
+public class FriendService {
+    @Autowired
+    private FriendMapper friendMapper;
+    public List<Friend> getFriendList(int userId) {
+        return friendMapper.getFriendList(userId);
+    }
+    // 根据用户名查询好友(用于搜索功能)
+    public List<Friend> getFriendListByUserName(String username,String selfUserName){
+        return friendMapper.getFriendListByUserName(username,selfUserName);
+    }
+    // 添加好友
+    public int add(int userId,int friendId) {
+        return friendMapper.add(userId,friendId);
+    }
+    // 根据传入的userId 查找friendId
+    public List<Integer> findFriend(int userId) {
+        return friendMapper.findFriend(userId);
+    }
+}
