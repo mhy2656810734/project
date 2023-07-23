@@ -1,0 +1,24 @@
+package com.example.demo.service;
+
+import com.example.demo.mapper.MessageSessionItemMapper;
+import com.example.demo.model.MessageSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/**
+ * @author 26568
+ * @date 2023-07-09 18:25
+ */
+@Service
+public class MessageSessionItemService {
+    @Autowired
+    private MessageSessionItemMapper msiMapper;
+    // 1.给message_session表插入一条数据并返回主键
+    public int addMessageSession(MessageSession messageSession) {
+        return msiMapper.addMessageSession(messageSession);
+    }
+    // 2.给message_session_user 表插入数据
+    public int insert(int sessionId,int userId) {
+        return msiMapper.insert(sessionId,userId);
+    }
+}
