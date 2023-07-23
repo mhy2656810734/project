@@ -1,0 +1,24 @@
+package com.example.demo.service;
+
+import com.example.demo.mapper.UserMapper;
+import com.example.demo.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/**
+ * @author 26568
+ * @date 2023-07-05 19:46
+ */
+@Service
+public class UserService {
+    @Autowired
+    private UserMapper userMapper;
+    // 登录
+    public User selectByName(String username) {
+        return userMapper.selectByName(username);
+    }
+    // 注册
+    public int insert(User user) {
+        return userMapper.insert(user);
+    }
+}
