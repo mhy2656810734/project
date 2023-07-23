@@ -1,0 +1,27 @@
+package com.example.demo.service;
+
+import com.example.demo.mapper.MessageSessionMapper;
+import com.example.demo.model.Friend;
+import com.example.demo.model.MessageSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * @author 26568
+ * @date 2023-07-08 17:04
+ */
+@Service
+public class MessageSessionService {
+    @Autowired
+    private MessageSessionMapper sessionMapper;
+    //1.根据useId查询当前用户在哪些会话中
+    public List<Integer> getSessionIdList(int userId){
+        return sessionMapper.getSessionIdList(userId);
+    }
+    // 2.根据查出来的会话，查询当前会话包含的所有用户（除自己以外）
+    public List<Friend> getFriendsById(int sessionId, int selfUserId){
+        return sessionMapper.getFriendsById(sessionId,selfUserId);
+    }
+}
