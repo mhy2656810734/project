@@ -1,0 +1,29 @@
+package com.example.demo.service;
+
+import com.example.demo.mapper.MessageMapper;
+import com.example.demo.model.Message;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * @author 26568
+ * @date 2023-07-10 9:56
+ */
+@Service
+public class MessageService {
+    @Autowired
+    private MessageMapper messageMapper;
+    // 通过sessionId 查询到最后一条历史消息
+    public String getLastMessageBySessionId(int sessionId) {
+        return messageMapper.getLastMessageBySessionId(sessionId);
+    }
+    // 根据传入的sessionId 查询历史消息，100条以内
+    public List<Message> getMessageBySessionId(int sessionId) {
+        return messageMapper.getMessageBySessionId(sessionId);
+    }
+    public int add(Message message) {
+        return messageMapper.add(message);
+    }
+}
