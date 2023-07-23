@@ -1,0 +1,29 @@
+package com.example.demo.service;
+
+import com.example.demo.mapper.ApplicationMapper;
+import com.example.demo.model.Application;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * @author 26568
+ * @date 2023-07-13 19:08
+ */
+@Service
+public class ApplicationService {
+    @Autowired
+    private ApplicationMapper applicationMapper;
+    public int add(Application application) {
+        return applicationMapper.add(application);
+    }
+    // 根据friendName 查找好友申请
+    public List<Application> loadApplication(String friendName){
+        return applicationMapper.loadApplication(friendName);
+    }
+    // 根据applicationId 删除数据
+    public int delete(int applicationId) {
+        return applicationMapper.delete(applicationId);
+    }
+}
