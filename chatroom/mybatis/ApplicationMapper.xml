@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.ApplicationMapper">
+    <insert id="add" useGeneratedKeys="true" keyProperty="applicationId">
+        insert into application values(null,#{username},#{content},#{friendName})
+    </insert>
+    <select id="loadApplication" resultType="com.example.demo.model.Application">
+        select * from application where friendName = #{friendName}
+    </select>
+    <delete id="delete">
+        delete from application where applicationId = #{application}
+    </delete>
+</mapper>
