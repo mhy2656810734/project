@@ -1,0 +1,22 @@
+package com.example.demo.common;
+
+import com.example.demo.entity.UserInfo;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+/**
+ * 通过session 来获得登录用户
+ * @author 26568
+ * @date 2023-05-24 10:10
+ */
+public class UserSesionTools {
+    public static UserInfo getLoginUser(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        UserInfo userInfo = (UserInfo) session.getAttribute(ApplicationVariable.SESSION_KEY_USERINFO);
+        if (session != null && userInfo != null) {
+            return userInfo;
+        }
+        return null;
+    }
+}
