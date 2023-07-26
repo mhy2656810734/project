@@ -1,0 +1,25 @@
+package com.example.demo.common;
+
+/**
+ * 进行正文部分截取的公共类
+ * @author 26568
+ * @date 2023-05-27 16:01
+ */
+public class StringTools {
+    /**
+     *
+     * @param str 需要截取的字符串
+     * @param maxLength 需要截取的长度
+     * @return
+     */
+    public static String getSubtring(String str,int maxLength) {
+        if (str == null || str.length() == 0) {
+            return str;
+        }
+        if (str.length() < maxLength) {
+            return str;
+        }
+        str = str.substring(0,maxLength);
+        return str;
+    }
+}
