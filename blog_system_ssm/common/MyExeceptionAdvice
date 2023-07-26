@@ -1,0 +1,17 @@
+package com.example.demo.common;
+
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+/**
+ * 统一异常处理
+ * @author 26568
+ * @date 2023-05-27 16:36
+ */
+@RestControllerAdvice
+public class MyExeceptionAdvice {
+    @ExceptionHandler(Exception.class)
+    public AjaxResult doExeception(Exception e) {
+        return  AjaxResult.fail(-1,e.getMessage());
+    }
+}
