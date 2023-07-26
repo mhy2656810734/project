@@ -1,0 +1,42 @@
+package com.example.demo.common;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.MethodParameter;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
+
+/**
+ * 统一返回数据格式的封装
+ * 当返回的数据不是 AjaxResult 的时候转换成 AjaxResult
+ * @author 26568
+ * @date 2023-05-27 16:41
+ */
+@ControllerAdvice
+public class ResponseAdvice implements ResponseBodyAdvice {
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Override
+    public boolean supports(MethodParameter returnType, Class converterType) {
+        return true;
+    }
+
+    @SneakyThrows
+    @Override
+    public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType, Class selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
+        // 先判断是不是AjaxResult类型
+        if (body instanceof AjaxResult) {
+            return body;
+        }
+        // 如果是字符串类型需要特殊处理
+        if (body instanceof String) {
+            return objectMapper.writeValueAsString(AjaxResult.success(body));
+        }
+        // 如果是其它类型的
+        return AjaxResult.success(body);
+    }
+}
