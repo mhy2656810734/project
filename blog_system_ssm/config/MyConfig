@@ -1,0 +1,38 @@
+package com.example.demo.config;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+/**
+ * 定义拦截规则
+ * @author 26568
+ * @date 2023-05-23 21:25
+ */
+@Configuration
+public class MyConfig implements WebMvcConfigurer {
+    @Autowired
+    private LoginInterceptor loginInterceptor;
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(loginInterceptor)
+                .addPathPatterns("/**") // /** 表示拦截所有路径
+                .excludePathPatterns("/login.html")
+                .excludePathPatterns("/reg.html")
+                .excludePathPatterns("/blog_list.html")
+                .excludePathPatterns("/blog_content.html")
+                .excludePathPatterns("/css/**")
+                .excludePathPatterns("/js/**")
+                .excludePathPatterns("/editor.md/**")
+                .excludePathPatterns("/img/**")
+                .excludePathPatterns("/user/login")
+                .excludePathPatterns("/user/reg")
+                .excludePathPatterns("/art /getdetail")
+                .excludePathPatterns("/art/addRcount")
+                .excludePathPatterns("/user/islogin")
+                .excludePathPatterns("/art/getlistbypage")
+                .excludePathPatterns("/art/getcount")
+        ;
+    }
+}
