@@ -1,0 +1,29 @@
+package com.example.demo.config;
+
+import com.example.demo.common.ApplicationVariable;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+/**
+ * 自定义拦截器
+ * @author 26568
+ * @date 2023-05-23 21:20
+ */
+@Component
+public class LoginInterceptor implements HandlerInterceptor {
+    // 返回true 继续执行 false 结束执行
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // 判断用户登录
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute(ApplicationVariable.SESSION_KEY_USERINFO) != null)
+            return true;
+        // 说明当前用户未登录 跳转到登录页面
+        response.sendRedirect("/login.html");
+        return false;
+    }
+}
