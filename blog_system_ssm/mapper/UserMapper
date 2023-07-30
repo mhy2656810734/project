@@ -1,0 +1,13 @@
+package com.example.demo.mapper;
+
+import com.example.demo.entity.UserInfo;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+@Mapper
+public interface UserMapper {
+    // 注册
+    int reg(UserInfo userInfo);
+    // 登录
+    UserInfo login(@Param("username") String usernmae);
+}
