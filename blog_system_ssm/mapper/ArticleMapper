@@ -1,0 +1,30 @@
+package com.example.demo.mapper;
+
+import com.example.demo.entity.ArticleInfo;
+import com.example.demo.vo.ArticleInfoVO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+@Mapper
+public interface ArticleMapper {
+    // 添加博客
+    int add(ArticleInfo articleInfo);
+    // 查询博客
+    ArticleInfo getDetailByAndUid(@Param("id")Integer id,@Param("uid")Integer uid);
+    // 修改博客
+    int update(ArticleInfo articleInfo);
+    // 查询博客
+    ArticleInfoVO getDetail(@Param("id")Integer id);
+    // 增加阅读量
+    int addRcount(@Param("id")Integer id);
+    // 展示我的所有博客
+    List<ArticleInfo> getListByUid(@Param("uid")Integer uid);
+    // 执行删除操作
+    int del(@Param("id")Integer id,@Param("uid")Integer uid);
+    // 展示所有博客
+    List<ArticleInfo> getListByPage(@Param("pageSize")Integer pageSize,@Param("offset")Integer offset);
+    // 计算文章总条数
+    Integer getCount();
+}
