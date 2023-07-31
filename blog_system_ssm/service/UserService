@@ -1,0 +1,33 @@
+package com.example.demo.service;
+
+import com.example.demo.entity.UserInfo;
+import com.example.demo.mapper.UserMapper;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/**
+ * @author 26568
+ * @date 2023-05-20 9:10
+ */
+@Service
+public class UserService {
+    @Autowired
+    private UserMapper userMapper;
+
+    /**
+     * 注册功能
+     * @param userInfo
+     * @return
+     */
+    public int reg(UserInfo userInfo) {
+        return userMapper.reg(userInfo);
+    }
+    /**
+     * 登录功能
+     */
+    public UserInfo login(String username) {
+        return userMapper.login(username);
+    }
+
+}
