@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.ArticleMapper">
+    <insert id="add">
+        insert into articleinfo(title,content, createtime, updatetime,uid)
+        values(#{title},#{content},now(),now(),#{uid})
+    </insert>
+    <select id="getDetailByAndUid" resultType="com.example.demo.entity.ArticleInfo">
+        select * from articleinfo where id=#{id} and uid=#{uid}
+    </select>
+    <update id="update">
+        update articleinfo set title=#{title},content=#{content},updatetime=#{updatetime}
+        where id = #{id} and uid=#{uid}
+    </update>
+    <select id="getDetail" resultType="com.example.demo.vo.ArticleInfoVO">
+        select articleinfo.*,userinfo.username from articleinfo,userinfo
+        where articleinfo.uid = userinfo.id and articleinfo.id = #{id}
+    </select>
+    <update id="addRcount">
+        update articleinfo set rcount = rcount+1 where id = #{id}
+    </update>
+    <select id="getListByUid" resultType="com.example.demo.entity.ArticleInfo">
+        select title,createtime,id,content from articleinfo where uid=#{uid} order by id desc
+    </select>
+    <delete id="del">
+        delete from articleinfo where id = #{id} and uid = #{uid}
+    </delete>
+    <select id="getListByPage" resultType="com.example.demo.entity.ArticleInfo">
+        select title,createtime,id,content from articleinfo
+        order by id desc
+        limit #{pageSize} offset #{offset}
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(id) from articleinfo;
+    </select>
+</mapper>
