@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.UserMapper">
+    <insert id="reg">
+        insert into userinfo(username,password,createtime, updatetime) values (#{username},#{password},now(),now())
+    </insert>
+    <select id="login" resultType="com.example.demo.entity.UserInfo">
+        select * from userinfo where username=#{username}
+    </select>
+</mapper>
