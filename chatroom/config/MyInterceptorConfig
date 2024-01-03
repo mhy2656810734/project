@@ -2,8 +2,10 @@ package com.example.demo.config;
 
 import com.example.demo.conponent.MyInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -14,6 +16,22 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class MyInterceptorConfig implements WebMvcConfigurer {
     @Autowired
     private MyInterceptor myInterceptorl;
+    @Value("${imgPath}")
+    private String imagePath;
+
+    /**
+     * 映射外部图片路径
+     * @param registry
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/image/code/**").addResourceLocations("file:"+imagePath);
+    }
+
+    /**
+     * 拦截器
+     * @param registry
+     */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(myInterceptorl)
@@ -26,6 +44,7 @@ public class MyInterceptorConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/client.html")
                 .excludePathPatterns("/login.html")
                 .excludePathPatterns("/rigister.html")
+                .excludePathPatterns("/getCode")
                 ;
     }
 }
