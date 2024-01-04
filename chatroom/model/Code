@@ -1,0 +1,13 @@
+package com.example.demo.model;
+
+import lombok.Data;
+
+/**
+ * @author 26568
+ * @date 2024-01-03 21:39
+ */
+@Data
+public class Code {
+    public String codeName;// 验证码文本内容
+    public String imagePath;// 验证码路径
+}
