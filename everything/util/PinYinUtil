@@ -1,0 +1,56 @@
+package util;
+
+import net.sourceforge.pinyin4j.PinyinHelper;
+import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
+import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType;
+import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
+
+/**
+ * 通过这个类来获取汉语转换后的字符
+ * @author 26568
+ * @date 2024-01-07 21:54
+ */
+public class PinYinUtil {
+    /**
+     * @param src 传入的汉语字符串
+     * @param fullSpace 判断是否需要全拼
+     *                  比如："记得开心" true 全拼是：jidekaixin  false 是: jdkx
+     * @return 返回转换后的字符串
+     */
+    public static String get(String src,boolean fullSpace) {
+        // 先进行判空
+        // trim 是对 src字符串两侧的空白字符
+        // 比如有个字符串是： hello   \t  \n  ==> hello
+        if (src == null || src.trim().length() == 0) {
+            return null;
+        }
+        // 将 u: 这个拼音转成 v
+        // 比如说 绿 拼音是 lu:  ==> lv
+        HanyuPinyinOutputFormat format = new HanyuPinyinOutputFormat();
+        format.setVCharType(HanyuPinyinVCharType.WITH_V);
+        // 遍历字符串src，将每个汉语转换后的字符进行拼接
+        StringBuilder stringBuilder =  new StringBuilder();
+        for (int i = 0; i < src.length(); i++) {
+            char ch = src.charAt(i);
+            // 将这个汉语转换成拼音
+            String[] arr = null;
+            try {
+                arr = PinyinHelper.toHanyuPinyinStringArray(ch,format);
+            } catch (BadHanyuPinyinOutputFormatCombination e) {
+                e.printStackTrace();
+            }
+            // 可能src中包含一些字符没有拼音，比如：a b  c  2 3.。。
+            // 此时直接拼接即可
+            if (arr == null || arr.length == 0) {
+                stringBuilder.append(ch);
+            } else if (fullSpace) {
+                // 是汉语 并且 返回全拼
+                stringBuilder.append(arr[0]);// 0 下标是一个汉字最常见的拼音
+            } else {
+                // 是汉语 但不要求全拼，直接拼接首拼音的第一个字符即可
+                stringBuilder.append(arr[0].charAt(0));
+            }
+        }
+        return stringBuilder.toString();
+    }
+}
