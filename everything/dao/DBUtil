@@ -1,0 +1,57 @@
+package dao;
+
+import org.sqlite.SQLiteDataSource;
+
+import javax.sql.DataSource;
+import java.sql.*;
+
+/**
+ * 封装数据库连接建立和资源回收
+ * @author 26568
+ * @date 2024-01-08 16:44
+ */
+public class DBUtil {
+    // 使用单例模式来提供DataSource
+    public static volatile DataSource dataSource = null;
+    public static DataSource getDataSource() {
+        // 注意这里的两个if的含义
+        if (dataSource == null) {
+            synchronized (DBUtil.class) {
+                if (dataSource != null) {
+                    dataSource = new SQLiteDataSource();
+                    ((SQLiteDataSource)dataSource).setUrl("jdbc:sqlite://F:/All Users/GitHub/FileSearchTool/fileSearcher.db");
+                }
+            }
+        }
+        return dataSource;
+    }
+    // 建立连接
+    public static Connection getConnection() throws SQLException {
+        return getDataSource().getConnection();
+    }
+    // 关闭资源
+    public static void close(Connection connection, Statement statement, ResultSet resultSet) {
+        // 这里使用三个if的原因：避免其中一个关闭出错而影响另外的关闭操作
+        if (resultSet != null) {
+            try {
+                resultSet.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        if (statement != null) {
+            try {
+                statement.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
