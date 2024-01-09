@@ -2,6 +2,7 @@ package dao;
 
 import util.PinYinUtil;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -56,7 +57,26 @@ public class FileMeta {
         this.size = size;
         this.lastModified = lastModified;
     }
-
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            // 看看是不是自己和自己比较
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (getClass() != o.getClass()) {
+            // 比较类型
+            return false;
+        }
+        FileMeta fileMeta = (FileMeta)o;
+        return name.equals(fileMeta.getName()) && path.equals(fileMeta.getPath()) && isDirectory == fileMeta.isDirectory;
+        // 因为不需要将 FileMeta放入hash表，就不重写hashcode了
+    }
+    public FileMeta(File f) {
+        this(f.getName(),f.getPath(),f.isDirectory(),f.length(),f.lastModified());
+    }
     public int getId() {
         return id;
     }
