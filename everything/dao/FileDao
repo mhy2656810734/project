@@ -1,0 +1,235 @@
+package dao;
+
+import org.sqlite.core.DB;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 通过这个类来封装对file_meta表的操作
+ * @author 26568
+ * @date 2024-01-08 16:58
+ */
+public class FileDao {
+    // 1.初始化数据库
+    public void initDB() {
+        // 1) 获取到dp.sql中的sql语句
+        // 2) 根据sql语句调用jdbc执行操作
+        Connection  connection = null;
+        // 使用Statement是因为接下来要进行执行sql语句这样的操作了，而不是查询。。等操作
+        Statement statement = null;
+        try {
+            connection = DBUtil.getConnection();
+            statement = connection.createStatement();
+            // 获取db.sql里面的sql语句
+            String[] strs = getInitSQL();
+            for (String sql:strs) {
+                System.out.println("[initDB]: "+sql);
+                statement.executeUpdate(sql);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBUtil.close(connection,statement,null);
+        }
+    }
+    // 从dp.sql中读取文件内容
+    // 返回值String[] 中的每个元素表示一个独立的SQL雨具
+    private String[] getInitSQL() {
+        // 拼接从dp.sql文件中读取到的数据
+        StringBuilder stringBuilder = new StringBuilder();
+                                 // 先获取到类对象 然后再获取到类加载器对象 再通过后面这个方法，就可以打开resources目录下的文件了
+        try( InputStream inputStream = FileDao.class.getClassLoader().getResourceAsStream("db.sql")) {
+            try(InputStreamReader  reader = new InputStreamReader(inputStream,"utf8")) {
+                while (true) {
+                    // 一次读一个字符，读到 -1 表示结束
+                    int ch = reader.read();
+                    if (ch == -1) {
+                        break;
+                    }
+                    stringBuilder.append(ch);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // 将所有sql语句根据 ; 进行分割
+        return stringBuilder.toString().split(";");
+    }
+    // 2.插入文件/目录数据到数据库
+    // 提供批量插入 因为每次扫描到的文件很多
+    public void add(List<FileMeta> fileMetas) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = DBUtil.getConnection();
+            // 关闭自动提交功能(也就是开启事务)
+            // 默认情况下，jdbc的Connection 每次执行一个execute系列方法都会产生一次和数据库的交互（加锁、解锁等）
+            // 为了统一在最开始的时候加锁，统一在最后进行解锁，就需要关闭自动提交
+            connection.setAutoCommit(false);
+            // 构造sql语句
+            String sql = "insert into file_meta values(null,?,?,?,?,?,?,?)";
+            preparedStatement = connection.prepareStatement(sql);
+            for (FileMeta fileMeta:fileMetas) {
+                // 根据传入的fileMeta对象 来设置每一个sql的相关字段
+                preparedStatement.setString(1,fileMeta.getName());
+                preparedStatement.setString(2,fileMeta.getPath());
+                preparedStatement.setBoolean(3,fileMeta.isDirectory());
+                preparedStatement.setString(4,fileMeta.getPinyin());
+                preparedStatement.setString(5,fileMeta.getPinyinFirst());
+                preparedStatement.setLong(6,fileMeta.getSize());
+                preparedStatement.setTimestamp(7,new Timestamp(fileMeta.getLastModified()));
+                // 使用addBatch 把这个构造好的片段累计起来
+                // addBatch会将已经构造好的SQL保存好，同时又会允许重新构造一个新的SQL
+                preparedStatement.addBatch();
+            }
+            // 执行所有的SQL片段
+            preparedStatement.executeBatch();
+            // 执行commit方法，告知数据库已经添加完毕
+            connection.commit();
+        } catch (SQLException e) {
+            // 如果上述代码出现了异常，就需要执行回滚操作
+            try {
+                // connection可能为空
+                if (connection != null) {
+                    connection.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }finally {
+            // 执行关闭资源操作
+            DBUtil.close(connection,preparedStatement,null);
+        }
+    }
+    // 3.按照特定的关键词进行查询
+    public List<FileMeta> searchByPattern(String pattern) {
+        List<FileMeta> fileMetas = new ArrayList<>();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = DBUtil.getConnection();
+            // 构造SQL语句
+            // 这里的搜索词pattern 可能是name的一部分 也可能是pinyin 或者 pinyin_first的一部分
+            String sql = "select name,path,is_directory,size,last_modified from file_meta"
+                    + "where name like ? or pinyin like ? or pinyin_first like ?"
+                    + "group by path,name";
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1,"%"+pattern+"%");
+            preparedStatement.setString(2,"%"+pattern+"%");
+            preparedStatement.setString(3,"%"+pattern+"%");
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String name = resultSet.getString("name");
+                String path = resultSet.getString("path");
+                boolean isDirectory = resultSet.getBoolean("is_directory");
+                long size = resultSet.getLong("size");
+                Timestamp timestamp = resultSet.getTimestamp("last_modified");
+                FileMeta fileMeta = new FileMeta(name,path,isDirectory,size,timestamp.getTime());
+                fileMetas.add(fileMeta);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBUtil.close(connection,preparedStatement,resultSet);
+        }
+        return fileMetas;
+    }
+    // 4.按照指定的路径查询
+    // 这个方法会在后续重新扫描，更新数据库的时候用到
+    public List<FileMeta> searchByPath(String targetPath) {
+        List<FileMeta> fileMetas = new ArrayList<>();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = DBUtil.getConnection();
+            String sql = "select name,path,is_directory,size,last_modified from file_meta"
+                    + "where path = ?";
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1,targetPath);
+            // 执行SQL语句
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String name = resultSet.getString("name");
+                String path = resultSet.getString("path");
+                boolean isDirectory = resultSet.getBoolean("is_directory");
+                long size = resultSet.getLong("size");
+                Timestamp lastModified = resultSet.getTimestamp("last_modified");
+                FileMeta fileMeta = new FileMeta(name,path,isDirectory,size,lastModified.getTime());
+                fileMetas.add(fileMeta);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBUtil.close(connection,preparedStatement,resultSet);
+        }
+        return fileMetas;
+    }
+    // 5.删除数据
+    // 发现某个文件已经从磁盘上删除了，此时就需要将这个文件从表中删除
+    public void delete(List<FileMeta> fileMetas) {
+        // 这里删除有可能是删除文件 也有可能是删除目录
+        Connection connection = null;
+        PreparedStatement statement = null;
+        try {
+            connection = DBUtil.getConnection();
+            // 关闭自动提交功能(也就是开启事务)
+            connection.setAutoCommit(false);
+            for (FileMeta fileMeta:fileMetas) {
+                String sql = null;
+                // 分情况来判断当前删除的fileMeta是目录还是文件
+                if (!fileMeta.isDirectory()) {
+                    // 是文件
+                    sql = "delete from file_meta where name = ? and path?";
+                } else {
+                    // 是目录
+                    // 比如当前要删除的 path 是 d:/text
+                    // 此处的 path like ? 要替换成形如：d:/test% => 目的就是不仅要删除当前目录下的文件，也要删除当前目录下的子目录
+                    sql = "delete from file_meta where (name=? and path=?) or (path like ?)";
+                }
+                // 此处不能直接使用addBatch了，因为之前的sql都是一个模版
+                // 这里把 ? 替换成不同的值，此处的sql是不一定相同的
+                // 因此此处就需要重新构造出 statement对象来表示这个sql了
+                statement = connection.prepareStatement(sql);
+                if (!fileMeta.isDirectory()) {
+                    // 此处是文件，需要替换两个？
+                    statement.setString(1,fileMeta.getName());
+                    statement.setString(2,fileMeta.getPath());
+                } else {
+                    // 次数是目录，需要替换三个? 注意第三个
+                    statement.setString(1,fileMeta.getName());
+                    statement.setString(2,fileMeta.getPath());
+                    // File.separator 表示 /
+                    // 假设要删除的是 d:/test/img 这个目录
+                    // 当前的name 是 img   path是 d:/test
+                    // 要删除img目录下的所有，其路径就是 d:/test/img/*   也就是path +'/'+name+'/'+%
+                    statement.setString(3,fileMeta.getPath()+File.separator+fileMeta.getName()+File.separator+'%');
+                }
+                // 执行删除操作
+                statement.executeUpdate();
+                // 由于是在for循环里面创建的statement对象，因此，需要对每个statement对象都进行释放资源操作
+                statement.close();
+                System.out.println("[delete] "+fileMeta.getPath()+fileMeta.getName());
+            }
+            // 告诉数据库，事务执行完毕了
+            connection.commit();
+        } catch (SQLException e) {
+            // 捕获异常需要进行事务回滚
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } finally {
+            DBUtil.close(connection,null,null);
+        }
+    }
+}
