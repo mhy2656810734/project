@@ -1,0 +1,81 @@
+package manager;
+
+import dao.FileDao;
+import dao.FileMeta;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 这个类主要是将文件/目录存入/删除 数据库
+ * @author 26568
+ * @date 2024-01-09 21:21
+ */
+public class FileManager {
+    private FileDao fileDao = new FileDao();
+    // 通过这个类，将当前basePath的所有文件+目录（包括子目录中的内容）全部添加进数据库
+    public void scanAll(File basePath) {
+        System.out.println("[FileManager] scanAll 开始");
+        long begin = System.currentTimeMillis();
+        scanAllByOneThread(basePath);
+        long end = System.currentTimeMillis();
+        System.out.println("[FileManager] scanAll 结束!  执行时间："+(end - begin) +" ms");
+    }
+    // 使用单线程递归调用这个方法，将所有目录和文件加入数据库
+    private void scanAllByOneThread(File basePath) {
+        // 递归出口
+        if (!basePath.isDirectory()) {
+            return;
+        }
+        // 针对当前目录进行扫描
+        scan(basePath);
+        // 得到当前目录下的所有内容
+        File[] files = basePath.listFiles();
+        // 判空
+        if (files == null || files.length == 0) {
+            return;
+        }
+        for (File f:files) {
+
+            if (f.isDirectory()) {
+                scanAllByOneThread(f);
+            }
+        }
+    }
+
+    // 这个scan方法是针对一个具体的路径
+    // 只将这个路径下的文件和子目录存入数据库  而并不存子目录中的其它子目录或者文件
+    private void scan(File path) {
+        System.out.println("[扫描的路径]: "+path.getAbsolutePath());
+        // 1.列出文件系统上所有真实的文件/目录
+        List<FileMeta> scanned = new ArrayList<>();
+        // 找到这个目录下的所有文件和目录
+        File[] files = path.listFiles();
+        for (File file: files) {
+            // 将每一个文件或者路径构造成FileMeta对象
+            FileMeta fileMeta = new FileMeta(file);
+            scanned.add(fileMeta);
+        }
+        // 2.根据path路径从数据库中查找所有文件/目录
+        List<FileMeta> saved = fileDao.searchByPath(path.getPath());
+        // 3.将saved（数据库）有，但scanned（文件系统）没有的从数据库删除（说明用户删除了本地的一些文件或者目录）
+        List<FileMeta> forDelete = new ArrayList<>();
+        for (FileMeta f:saved) {
+            if (!scanned.contains(f)) {
+                forDelete.add(f);
+            }
+        }
+        // 从数据库删除
+        fileDao.delete(forDelete);
+        // 4.将scanned（文件系统）有，但saved（数据库）没有加入数据库（说明用户新建了一些文件/目录)
+        List<FileMeta> forAdd = new ArrayList<>();
+        for (FileMeta f:scanned) {
+            if (!saved.contains(f)) {
+                forAdd.add(f);
+            }
+        }
+        // 加入数据库
+        fileDao.add(forAdd);
+    }
+}
