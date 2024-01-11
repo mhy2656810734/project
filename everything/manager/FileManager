@@ -6,6 +6,10 @@ import dao.FileMeta;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 这个类主要是将文件/目录存入/删除 数据库
@@ -14,11 +18,22 @@ import java.util.List;
  */
 public class FileManager {
     private FileDao fileDao = new FileDao();
+    // 设置选手数量为1，当线程池执行完所有任务之后，就立刻调用一次CountDown 撞线
+    private CountDownLatch countDownLatch = new CountDownLatch(1);
+    // 用来衡量任务结束的计时器，当为0时，表示任务结束了
+    private AtomicInteger taskCount = new AtomicInteger(0);
     // 通过这个类，将当前basePath的所有文件+目录（包括子目录中的内容）全部添加进数据库
     public void scanAll(File basePath) {
         System.out.println("[FileManager] scanAll 开始");
         long begin = System.currentTimeMillis();
-        scanAllByOneThread(basePath);
+        // 单线程
+//        scanAllByOneThread(basePath);
+        scanAllByThreadPool(basePath);
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         long end = System.currentTimeMillis();
         System.out.println("[FileManager] scanAll 结束!  执行时间："+(end - begin) +" ms");
     }
@@ -43,7 +58,43 @@ public class FileManager {
             }
         }
     }
+    // 使用多线程递归调用这个方法，将所有目录和文件加入数据库
+    private static ExecutorService pool = Executors.newFixedThreadPool(8);
+    private void scanAllByThreadPool(File basePath) {
+        if (!basePath.isDirectory()) {
+            return;
+        }
+        // 计数器自增
+        taskCount.getAndIncrement();// taskCount++
+        // 扫描当前目录
+        pool.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    scan(basePath);
+                } finally {
+                    // 计数器自减
+                    // 放到finally确保自减操作一定能够执行到，
+                    taskCount.getAndDecrement();// taskCount--
+                    if (taskCount.get() == 0) {
+                        // 如果计数器为0了，就通知主线程停表了
+                        countDownLatch.countDown();
+                    }
+                }
 
+            }
+        });
+        File[] files = basePath.listFiles();
+        if (files == null || files.length == 0) {
+            return;
+        }
+        for (File f:files) {
+            // 是目录就递归
+            if (f.isDirectory()) {
+                scanAllByThreadPool(f);
+            }
+        }
+    }
     // 这个scan方法是针对一个具体的路径
     // 只将这个路径下的文件和子目录存入数据库  而并不存子目录中的其它子目录或者文件
     private void scan(File path) {
