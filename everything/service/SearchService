@@ -1,0 +1,52 @@
+package service;
+
+import dao.FileDao;
+import dao.FileMeta;
+import manager.FileManager;
+
+import java.io.File;
+import java.util.List;
+
+/**
+ * 通过这个类来描述整个程序的核心业务逻辑
+ * @author 26568
+ * @date 2024-01-10 20:19
+ */
+public class SearchService {
+    private FileDao fileDao = new FileDao();
+    private FileManager fileManager = new FileManager();
+    // 扫描线程 周期性扫描路径
+    private Thread t = null;
+    // 1.初始化方法
+    public void init(String path) {
+        // 初始化数据库并进行一次初始的扫描操作
+        fileDao.initDB();
+        fileManager.scanAll(new File(path));
+        t = new Thread(() -> {
+            // t没有被终止就继续扫描
+            while (!t.isInterrupted()) {
+                try {
+                    // 每分钟扫描一次
+                    Thread.sleep(60000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    // 当线程被唤醒以后，可能会将标志位清空设置成false，导致循环继续执行，所以需要执行break
+                    break;
+                }
+                fileManager.scanAll(new File(path));
+            }
+        });
+        t.start();
+        System.out.println("[SearchService] 初始化完成!");
+    }
+    // 使用这个方法让扫描线程停止下来
+    public void shutDown() {
+        if (t != null) {
+            t.interrupt();
+        }
+    }
+    // 2.查找操作
+    public List<FileMeta> search(String pattern) {
+        return fileDao.searchByPattern(pattern);
+    }
+}
