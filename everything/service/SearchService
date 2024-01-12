@@ -21,10 +21,12 @@ public class SearchService {
     public void init(String path) {
         // 初始化数据库并进行一次初始的扫描操作
         fileDao.initDB();
-        fileManager.scanAll(new File(path));
+        // 把这个扫描操作放到扫描线程中完成，不在界面主线程中完成了
+//        fileManager.scanAll(new File(path));
         t = new Thread(() -> {
             // t没有被终止就继续扫描
             while (!t.isInterrupted()) {
+                fileManager.scanAll(new File(path));
                 try {
                     // 每分钟扫描一次
                     Thread.sleep(60000);
@@ -33,7 +35,7 @@ public class SearchService {
                     // 当线程被唤醒以后，可能会将标志位清空设置成false，导致循环继续执行，所以需要执行break
                     break;
                 }
-                fileManager.scanAll(new File(path));
+//                fileManager.scanAll(new File(path));
             }
         });
         t.start();
