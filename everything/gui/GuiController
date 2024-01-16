@@ -1,0 +1,98 @@
+package gui;
+
+import dao.FileMeta;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Window;
+import service.SearchService;
+
+import java.io.File;
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
+
+/**
+ * 通过这个类，将界面和java代码关联起来
+ * @author 26568
+ * @date 2024-01-12 10:25
+ */
+public class GuiController implements Initializable {
+    @FXML
+    private GridPane gridPane;
+
+    @FXML
+    private Button button;
+
+    @FXML
+    private Label label;
+
+    @FXML
+    private TextField textField;
+
+    @FXML
+    private TableView<FileMeta> tableView;
+    private SearchService searchService = null;
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        // 给输入框的内容添加一个监听器（当输入框中的内容发生改变就可以检测到）
+        textField.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                // oldVlue 表示输入框修改之前，旧的值
+                // newValue 表示输入框修改之后，新的值
+                // 根据这个方法来刷新表格中的值
+                freshTable(newValue);
+            }
+        });
+    }
+    public void freshTable(String query) {
+        // 重新查询数据库，把查询结果设置到表格中
+        // 需要根据searchService 来查询
+        if (searchService == null) {
+            System.out.println("searchService 为空，不能查询!!");
+            return;
+        }
+        // 先把之前表格中旧的值给清空，需要拿到tableView的内部的集合类
+        ObservableList<FileMeta> fileMetas = tableView.getItems();
+        fileMetas.clear();
+        // 根据新的路径查询
+        List<FileMeta> list = searchService.search(query);
+        // 把查询结果添加到TableView中
+        fileMetas.addAll(list);
+    }
+    // 给按钮添加的点击事件的回调方法 需要有个MouseEvent参数
+    // 虽然当前用不到方法的参数，但是还是要写上
+    public void choose(MouseEvent mouseEvent) {
+//        System.out.println("点击按钮");
+        // 创建出目录选择器对象
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        // 显示对话框（子窗口） 父窗口是：gridPane
+        Window window = gridPane.getScene().getWindow();
+        File file = directoryChooser.showDialog(window);
+        if (file == null) {
+            System.out.println("当前用户选择的路径为空!");
+            return;
+        }
+        System.out.println(file.getAbsolutePath());
+        // 将用户选择的路径设置到label标签中
+        label.setText(file.getAbsolutePath());
+        // 用户可能选择不同的路径，因此需要先判断searchService是否不为空，不为空就需要将之前的扫描线程先关闭
+        // 不为空说明不是程序首次扫描
+        if (searchService != null) {
+            searchService.shutDown();
+        }
+        // 将用户选择的路径所对应的数据加入数据库中
+        searchService = new SearchService();
+        searchService.init(file.getAbsolutePath());
+    }
+}
